@@ -1,0 +1,9 @@
+{
+  "name": "Flight Time",
+  "short_name": "Flight Time",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E9EFF1",
+  "theme_color": "#E9EFF1",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

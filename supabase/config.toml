@@ -1,0 +1,16 @@
+# Supabase CLI config for Flight Time. Link with: supabase link --project-ref <ref>
+project_id = "flight-time"
+
+[functions.flight-status]
+verify_jwt = false
+
+[functions.fare-search]
+verify_jwt = false
+
+[functions.loyalty-sync]
+verify_jwt = false
+
+# All functions check auth themselves (new sb_publishable keys are not JWTs).
+# flight-alert-webhook checks its own ?key= secret.
+[functions.flight-alert-webhook]
+verify_jwt = false

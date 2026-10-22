@@ -1,0 +1,221 @@
+/*
+ * Flight Time — visual system
+ * Base: aeronautical chart paper and ink. Accent: the chart's airway magenta.
+ * The one loud element is the split-flap departure board; everything else stays quiet.
+ */
+:root {
+  --paper: #e9eff1;      /* chart paper */
+  --card: #f6f9fa;
+  --ink: #13283b;        /* chart ink */
+  --muted: #5a6b7a;
+  --line: #c6d3d9;
+  --airway: #a8266f;     /* sectional-chart airway magenta */
+  --board: #17232d;      /* departure board housing */
+  --flap: #22313d;
+  --flap-text: #f2efe6;
+  --amber: #f0b13a;      /* delayed */
+  --green: #4cb07a;      /* on time / landed */
+  --red: #e5574c;        /* cancelled */
+  --sky: #7cc2e8;        /* in the air */
+
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Public Sans", system-ui, sans-serif;
+
+  --tabs-h: 64px;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.5 var(--body);
+}
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--airway); outline-offset: 2px; }
+
+.shell { max-width: 760px; margin: 0 auto; padding: 0 16px calc(var(--tabs-h) + 32px + env(safe-area-inset-bottom)); }
+
+/* ---------- header & tabs ---------- */
+.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(14px + env(safe-area-inset-top)) 0 14px;
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font: 700 24px/1 var(--display); letter-spacing: 0.01em;
+  color: var(--ink); text-decoration: none;
+}
+.brand img { border-radius: 7px; }
+
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; justify-content: center;
+  height: calc(var(--tabs-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--board);
+}
+.tab {
+  flex: 1; max-width: 190px;
+  background: none; border: 0; cursor: pointer;
+  color: #9fb0bd;
+  font: 600 18px/1 var(--display); letter-spacing: 0.02em;
+  border-top: 3px solid transparent;
+}
+.tab[aria-current="page"] { color: var(--flap-text); border-top-color: var(--amber); }
+
+.setup { background: #fff4d9; border: 1px solid #ecd28f; padding: 10px 12px; border-radius: 6px; font-size: 14px; }
+
+/* ---------- page type ---------- */
+.page { padding-top: 8px; }
+.page-title {
+  font: 700 clamp(34px, 7vw, 48px)/1 var(--display);
+  letter-spacing: -0.005em;
+  margin: 8px 0 20px;
+}
+.section-title { font: 600 24px/1.1 var(--display); margin: 36px 0 12px; }
+.empty { color: var(--muted); max-width: 52ch; }
+.note { color: var(--muted); font-size: 14px; border-left: 3px solid var(--airway); padding: 2px 0 2px 10px; }
+.fine { color: var(--muted); font-size: 13px; max-width: 64ch; }
+.error { color: #a12a22; font-weight: 600; }
+.ok { color: #1f6b44; font-weight: 600; }
+
+/* ---------- forms ---------- */
+.search-row, .fare-form, .miles-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 16px; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 88px; }
+.field.grow { flex: 1 1 200px; }
+.field > span { font-size: 13px; font-weight: 600; color: var(--muted); }
+.field input, .field select {
+  height: 48px; padding: 0 12px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+}
+.fare-form .field:not(.grow) input { width: 88px; font: 600 22px/1 var(--display); letter-spacing: 0.06em; text-transform: uppercase; }
+.search-row input { font: 600 22px/1 var(--display); letter-spacing: 0.04em; }
+.swap {
+  height: 48px; width: 40px; border: 0; background: none; cursor: pointer;
+  color: var(--airway); font-size: 22px;
+}
+
+.btn {
+  height: 48px; padding: 0 20px;
+  background: var(--ink); color: var(--paper);
+  border: 0; border-radius: 6px; cursor: pointer;
+  font-weight: 600; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.btn:disabled { opacity: 0.55; cursor: default; }
+.btn-quiet { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.btn-small { height: 38px; padding: 0 16px; }
+.linkish { background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-align: left; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0 8px; }
+
+/* ---------- departure board ---------- */
+.board {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  background: var(--board);
+  padding: 14px 16px 16px;
+  border-radius: 8px;
+}
+.board-cell { display: flex; flex-direction: column; gap: 6px; }
+.board-key { color: #8fa2b1; font: 500 14px/1 var(--display); letter-spacing: 0.04em; }
+.flaps { display: inline-flex; gap: 2px; }
+.flap {
+  position: relative;
+  display: inline-grid; place-items: center;
+  width: 0.78em; height: 1.18em;
+  background: var(--flap);
+  color: var(--flap-text);
+  font: 600 clamp(18px, 3.4vw, 24px)/1 var(--display);
+  border-radius: 2px;
+}
+.flap::after { /* the hinge line across the middle of every flap */
+  content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px;
+  background: rgba(0, 0, 0, 0.55);
+}
+.tone-delayed .flap { color: var(--amber); }
+.tone-cancelled .flap { color: var(--red); }
+.tone-landed .flap, .tone-scheduled .flap { color: var(--green); }
+.tone-airborne .flap { color: var(--sky); }
+
+.board-compact { padding: 10px 12px 12px; gap: 8px 12px; }
+.board-compact .flap { font-size: 18px; }
+.board-compact .board-key { font-size: 12px; }
+
+
+/* one orchestrated moment: the board's flaps settle in when a flight loads */
+@media (prefers-reduced-motion: no-preference) {
+  .board .flap { animation: settle 420ms cubic-bezier(.2,.8,.2,1) both; }
+  .board-cell:nth-child(2) .flap { animation-delay: 60ms; }
+  .board-cell:nth-child(3) .flap { animation-delay: 120ms; }
+  .board-cell:nth-child(4) .flap { animation-delay: 180ms; }
+  .board-cell:nth-child(5) .flap { animation-delay: 240ms; }
+  .trip .flap { animation: none; }
+}
+@keyframes settle {
+  0% { transform: perspective(200px) rotateX(-90deg); opacity: 0.2; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* ---------- map & facts ---------- */
+.flight-map {
+  height: clamp(240px, 46vh, 400px);
+  margin-top: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #dfe8ec;
+}
+.airport-dot { background: var(--paper); border: 3px solid var(--airway); border-radius: 50%; }
+.plane-marker { background: none; border: 0; }
+/* tone the street map down toward chart paper so the magenta route reads first */
+.chart-tiles { filter: grayscale(1) contrast(0.85) brightness(1.06); }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 20px 0 0; }
+.facts dt { color: var(--muted); font-size: 14px; }
+.facts dd { margin: 2px 0 0; font: 600 30px/1.05 var(--display); }
+.facts small { display: block; font: 400 14px/1.4 var(--body); color: var(--muted); margin-top: 4px; }
+
+.progress { height: 6px; background: var(--line); border-radius: 3px; margin-top: 18px; overflow: hidden; }
+.progress span { display: block; height: 100%; background: var(--airway); }
+
+.others { margin-top: 20px; }
+.others summary { cursor: pointer; font-weight: 600; }
+.others ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+.others [aria-current="true"] { font-weight: 700; }
+
+/* ---------- fares ---------- */
+.fares { list-style: none; padding: 0; margin: 8px 0 16px; border-top: 1px solid var(--line); }
+.fare {
+  display: grid; grid-template-columns: 92px 1fr auto; gap: 14px; align-items: center;
+  padding: 14px 0; border-bottom: 1px solid var(--line);
+}
+.fare-price { font: 700 32px/1 var(--display); }
+.fare-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fare-main span { color: var(--muted); font-size: 14px; }
+.fare-main .earn { color: var(--airway); font-weight: 600; }
+.fares li:first-child .fare-price { color: var(--airway); }
+
+/* ---------- trips ---------- */
+.trip-list, .watch-list, .miles-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.trip { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; }
+.trip-day { display: block; font: 600 16px/1 var(--display); color: var(--muted); margin-bottom: 6px; }
+.remove { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.watch-list li { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.watch-list span { color: var(--muted); }
+
+/* ---------- miles ---------- */
+.miles-total { font-size: 18px; margin: -6px 0 20px; }
+.miles-total strong { font: 700 40px/1 var(--display); color: var(--airway); margin-right: 6px; }
+.miles-list li {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; align-items: center;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.miles-list li > div:first-child { display: flex; flex-direction: column; }
+.miles-list li span { color: var(--muted); font-size: 14px; }
+.miles-bal { font: 600 28px/1 var(--display); }
+.miles-list .remove { grid-column: 1 / -1; justify-self: start; }
+
+code { font-size: 0.9em; background: rgba(19, 40, 59, 0.07); padding: 1px 4px; border-radius: 3px; }
