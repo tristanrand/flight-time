@@ -64,6 +64,10 @@ New schema changes go in a new file in `supabase/migrations/` — never edit the
 
 Aeronautical-chart palette (chart paper `#E9EFF1`, ink `#13283B`, airway magenta `#A8266F`) with a split-flap departure board (`components/Board.jsx`) as the one loud element. Type: Barlow Condensed (display, board) + Public Sans (body). Copy is plain, sentence case, from the traveler's point of view. Tokens are at the top of `web/src/styles.css`.
 
+## Deploys
+
+Repo: https://github.com/tristanrand/flight-time. Vercel is connected to it: every push to `main` deploys production (https://flight-time-alpha.vercel.app). Edge functions do NOT auto-deploy; deploy them with the Supabase CLI.
+
 ## Commands
 
 ```bash
@@ -75,6 +79,5 @@ supabase db push                             # apply new migrations
 
 ## Not yet set up
 
-- **No GitHub repo yet.** The first deploys were uploaded straight to Vercel. Next step: create `tristanrand/flight-time`, push, and connect it in Vercel (Settings → Git) so pushes to `main` deploy like Randline.
 - **Supabase Auth URLs:** Site URL and Redirect URLs must include https://flight-time-alpha.vercel.app (and http://localhost:5173 for dev), or sign-in links bounce to the wrong place.
 - **Map tiles** use openstreetmap.org directly. Fine for testing; switch to a paid tile plan before launch.
