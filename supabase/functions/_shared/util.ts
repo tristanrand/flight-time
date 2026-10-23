@@ -62,3 +62,24 @@ export async function cached<T>(
 
 export const logUsage = (db: SupabaseClient, provider: string, endpoint: string, resultSets = 1) =>
   db.from("api_usage").insert({ provider, endpoint, result_sets: resultSets });
+
+/** Best-guess client IP behind Supabase's proxy. */
+export const ipOf = (req: Request) =>
+  (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || req.headers.get("cf-connecting-ip") || "unknown";
+
+/**
+ * Per-IP limit for anonymous, money-spending endpoints. Returns a 429 Response when over,
+ * or null to carry on. Fails open if the limiter itself errors, so a DB hiccup never blocks lookups.
+ */
+export async function limited(req: Request, db: SupabaseClient, scope: string, perMinute: number) {
+  const { data, error } = await db.rpc("rate_hit", { p_key: `${scope}:${ipOf(req)}`, p_window_seconds: 60, p_max_hits: perMinute });
+  if (error) return null;
+  return data === false ? fail("Too many requests. Give it a minute and try again.", 429) : null;
+}
+
+/** Add an item to a user's alerts feed. */
+export const notify = (
+  db: SupabaseClient,
+  userId: string,
+  n: { kind: "flight" | "price" | "booking" | "miles"; title: string; body?: string; link?: string },
+) => db.from("notifications").insert({ user_id: userId, ...n });

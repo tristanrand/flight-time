@@ -1,51 +1,94 @@
 import { useEffect, useState } from "react";
-import Track from "./pages/Track.jsx";
-import Fares from "./pages/Fares.jsx";
+import Home from "./pages/Home.jsx";
+import Flight from "./pages/Flight.jsx";
+import Airport from "./pages/Airport.jsx";
+import Route from "./pages/Route.jsx";
+import Radar from "./pages/Radar.jsx";
+import Fly from "./pages/Fly.jsx";
+import Checkout from "./pages/Checkout.jsx";
+import Booking from "./pages/Booking.jsx";
 import Trips from "./pages/Trips.jsx";
-import Miles from "./pages/Miles.jsx";
+import Wallet from "./pages/Wallet.jsx";
 import Account from "./pages/Account.jsx";
-import { configured, useUser } from "./lib.js";
+import { configured, local, supabase, useUser } from "./lib.js";
+import { go, useRoute } from "./router.js";
 
-const TABS = [
-  { id: "track", label: "Track" },
-  { id: "fares", label: "Fares" },
-  { id: "trips", label: "My trips" },
-  { id: "miles", label: "Miles" },
-];
-
-const fromHash = () => {
-  const id = location.hash.replace("#", "");
-  return [...TABS.map((t) => t.id), "account"].includes(id) ? id : "track";
+const PAGES = {
+  "": Home, flight: Flight, airport: Airport, route: Route, radar: Radar,
+  fly: Fly, checkout: Checkout, booking: Booking, trips: Trips, wallet: Wallet, account: Account,
 };
 
+// which tab lights up for each page
+const SECTION = { "": "track", flight: "track", airport: "track", route: "track", radar: "radar", fly: "fly", checkout: "fly", booking: "trips", trips: "trips", wallet: "wallet", account: "account" };
+
+const TABS = [
+  { id: "track", label: "Track", href: "#/" },
+  { id: "radar", label: "Radar", href: "#/radar" },
+  { id: "fly", label: "Fly", href: "#/fly" },
+  { id: "trips", label: "Trips", href: "#/trips" },
+  { id: "wallet", label: "Wallet", href: "#/wallet" },
+];
+
+function useUnread(user) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (!user || !supabase) return setN(0);
+    const load = () =>
+      supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null).then(({ count }) => setN(count ?? 0));
+    load();
+    const ch = supabase
+      .channel("unread")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` }, load)
+      .subscribe();
+    return () => supabase.removeChannel(ch);
+  }, [user?.id]);
+  return n;
+}
+
 export default function App() {
+  const route = useRoute();
   const user = useUser();
-  const [tab, setTab] = useState(fromHash);
-  const [arg, setArg] = useState(null);
+  const unread = useUnread(user);
+  const Page = PAGES[route.page] ?? Home;
+  const section = SECTION[route.page] ?? "track";
+  const full = route.page === "radar";
+
+  // back from a magic link: finish the trip the traveler started before signing in
+  useEffect(() => {
+    if (!user) return;
+    const next = local.get("afterSignIn", null);
+    if (!next) return;
+    local.set("afterSignIn", null);
+    go(next.startsWith("/") ? next : `/${next}`, null, { replace: true });
+  }, [user?.id]);
+
+  // new screen, new scroll position (but not when only the query changes)
+  useEffect(() => {
+    scrollTo(0, 0);
+  }, [route.parts.join("/")]);
 
   useEffect(() => {
-    const on = () => setTab(fromHash());
-    addEventListener("hashchange", on);
-    return () => removeEventListener("hashchange", on);
-  }, []);
-
-  const go = (id, a = null) => {
-    setArg(a);
-    setTab(id);
-    history.pushState(null, "", `#${id}`);
-    scrollTo(0, 0);
-  };
-
-  const Page = { track: Track, fares: Fares, trips: Trips, miles: Miles, account: Account }[tab];
+    document.title = { track: "Flight Time", radar: "Radar · Flight Time", fly: "Fares · Flight Time", trips: "My trips · Flight Time", wallet: "Wallet · Flight Time" }[section] ?? "Flight Time";
+  }, [section]);
 
   return (
-    <div className="shell">
+    <div className={`shell${full ? " shell-full" : ""}`}>
       <header className="top">
-        <a className="brand" href="#track" onClick={(e) => (e.preventDefault(), go("track"))}>
+        <a className="brand" href="#/">
           <img src="/icon.svg" alt="" width="28" height="28" />
           Flight Time
         </a>
-        <button className="linkish" onClick={() => go("account")}>{user ? "Account" : "Sign in"}</button>
+        <nav className="top-nav" aria-label="Sections">
+          {TABS.map((t) => (
+            <a key={t.id} href={t.href} aria-current={section === t.id ? "page" : undefined}>
+              {t.label}
+              {t.id === "trips" && unread > 0 && <i className="dot" aria-label={`${unread} new alerts`} />}
+            </a>
+          ))}
+        </nav>
+        <a className="linkish acct" href="#/account" aria-current={section === "account" ? "page" : undefined}>
+          {user ? "Account" : "Sign in"}
+        </a>
       </header>
 
       {!configured && (
@@ -55,14 +98,15 @@ export default function App() {
       )}
 
       <main>
-        <Page key={tab + JSON.stringify(arg)} go={go} initial={arg} />
+        <Page key={route.parts.slice(0, 3).join("/")} route={route} />
       </main>
 
       <nav className="tabs" aria-label="Sections">
         {TABS.map((t) => (
-          <button key={t.id} className="tab" aria-current={tab === t.id ? "page" : undefined} onClick={() => go(t.id)}>
+          <a key={t.id} className="tab" href={t.href} aria-current={section === t.id ? "page" : undefined}>
             {t.label}
-          </button>
+            {t.id === "trips" && unread > 0 && <i className="dot" aria-hidden="true" />}
+          </a>
         ))}
       </nav>
     </div>

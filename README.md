@@ -1,10 +1,11 @@
 # Flight Time
 
-Track any flight live, find the cheapest fares, and keep every airline's miles in one place.
+Track any flight live, find the cheapest fares in cash or points, book them in the app, and keep every airline's miles in one place.
 
 - `web/`: the app (Vite + React), hosted on Vercel
 - `supabase/`: database migrations and server functions (API keys live here)
 - `docs/phase-1-plan.md`: what Phase 1 includes, the sign-ups needed, and what to build next
+- `docs/setup-booking-and-points.md`: turning on Duffel booking, Stripe payments, award prices and price alerts
 - `CLAUDE.md`: working notes for Claude Code
 
 ## Run it locally
@@ -31,3 +32,5 @@ Add these in **Supabase → Edge Functions → Secrets**:
 | `TRAVELPAYOUTS_MARKER` | Travelpayouts → your partner ID (marker) |
 
 No redeploy is needed. Functions read secrets on each request.
+
+Booking, payments, award prices and the daily price-watch job have their own keys: see `docs/setup-booking-and-points.md`.

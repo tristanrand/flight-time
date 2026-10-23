@@ -14,3 +14,13 @@ verify_jwt = false
 # flight-alert-webhook checks its own ?key= secret.
 [functions.flight-alert-webhook]
 verify_jwt = false
+
+# booking checks the caller itself; the two webhooks and the cron job check their own secrets.
+[functions.booking]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.price-watch-check]
+verify_jwt = false
