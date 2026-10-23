@@ -86,7 +86,7 @@ export default function Airport({ route }) {
           </div>
           {err && <p className="error" role="alert">{err}</p>}
           {!data && !err && <div className="board board-loading" aria-busy="true"><span className="board-key">Loading the {kind} board…</span></div>}
-          {data && (data.flights?.length ? <BoardTable flights={[...data.flights].sort((a, b) => (kind === "departures" ? a.scheduled_out : a.scheduled_in).localeCompare(kind === "departures" ? b.scheduled_out : b.scheduled_in))} kind={kind} tz={tz} /> : <p className="empty">No {kind} listed right now.</p>)}
+          {data && (data.flights?.length ? <BoardTable flights={[...data.flights].sort((a, b) => String((kind === "departures" ? a.scheduled_out : a.scheduled_in) ?? a.scheduled_out ?? "").localeCompare(String((kind === "departures" ? b.scheduled_out : b.scheduled_in) ?? b.scheduled_out ?? "")))} kind={kind} tz={tz} /> : <p className="empty">No {kind} listed right now.</p>)}
           {at && <p className="fine">Updated {ago(at, now)}. Shows the next 15 {kind}. Tap a flight for its gate, plane and live position.</p>}
         </div>
 

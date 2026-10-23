@@ -22,7 +22,7 @@ export default function Route({ route }) {
   // today's picture: skip flights that landed a while ago, earliest departure first
   const flights = (r?.flights ?? [])
     .filter((f) => Date.now() - new Date(f.actual_in ?? f.estimated_in ?? f.scheduled_in ?? f.scheduled_out) < 2 * 3600_000)
-    .sort((a, b) => a.scheduled_out.localeCompare(b.scheduled_out));
+    .sort((a, b) => String(a.scheduled_out ?? "").localeCompare(String(b.scheduled_out ?? "")));
   const dist = A && B ? Math.round(miles(A, B)) : null;
 
   return (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState } from "react";
 import Home from "./pages/Home.jsx";
 import Flight from "./pages/Flight.jsx";
 import Airport from "./pages/Airport.jsx";
@@ -28,6 +28,30 @@ const TABS = [
   { id: "trips", label: "Trips", href: "#/trips" },
   { id: "wallet", label: "Wallet", href: "#/wallet" },
 ];
+
+/** One broken screen shouldn't blank the whole app: show a way back instead. */
+class Boundary extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(e) {
+    console.error(e);
+  }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return (
+      <section className="page">
+        <h1 className="page-title">Something went wrong here</h1>
+        <p className="empty">This screen hit an error. Try again, or head back to tracking.</p>
+        <div className="actions">
+          <button className="btn" onClick={() => location.reload()}>Try again</button>
+          <a className="btn btn-quiet" href="#/">Track a flight</a>
+        </div>
+      </section>
+    );
+  }
+}
 
 function useUnread(user) {
   const [n, setN] = useState(0);
@@ -98,7 +122,9 @@ export default function App() {
       )}
 
       <main>
-        <Page key={route.parts.slice(0, 3).join("/")} route={route} />
+        <Boundary key={route.parts.slice(0, 3).join("/")}>
+          <Page route={route} />
+        </Boundary>
       </main>
 
       <nav className="tabs" aria-label="Sections">
